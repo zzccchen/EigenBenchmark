@@ -13,7 +13,7 @@
 #define LY2        402
 #define LZ2        42
 
-int main() {  // 256s 单线程Matrix
+int main() {  // 256s 多线程Matrix
   Eigen::setNbThreads(8);
   std::cout << Eigen::nbThreads() << "\n";
   Eigen::ThreadPool pool(8);
