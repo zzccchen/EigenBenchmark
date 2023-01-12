@@ -19,55 +19,73 @@ int main() {  // 244.8s 多线程tensor
   Eigen::ThreadPool pool(8);
   Eigen::ThreadPoolDevice dev(&pool, 8);
 
-  Eigen::Tensor<TensorType, 3> tensor_full(LX, LY, LZ);
-  Eigen::Tensor<TensorType, 3> tensor_no_full_e(LX2, LY2, LZ2);
-  Eigen::Tensor<TensorType, 3> tensor_no_full_w(LX2, LY2, LZ2);
-  Eigen::Tensor<TensorType, 3> tensor_no_full_s(LX2, LY2, LZ2);
-  Eigen::Tensor<TensorType, 3> tensor_no_full_n(LX2, LY2, LZ2);
-  Eigen::Tensor<TensorType, 3> tensor_no_full_t(LX2, LY2, LZ2);
-  Eigen::Tensor<TensorType, 3> tensor_no_full_b(LX2, LY2, LZ2);
-  Eigen::Tensor<TensorType, 3> tensor_e(LX2, LY2, LZ2);
-  Eigen::Tensor<TensorType, 3> tensor_w(LX2, LY2, LZ2);
-  Eigen::Tensor<TensorType, 3> tensor_s(LX2, LY2, LZ2);
-  Eigen::Tensor<TensorType, 3> tensor_n(LX2, LY2, LZ2);
-  Eigen::Tensor<TensorType, 3> tensor_t(LX2, LY2, LZ2);
-  Eigen::Tensor<TensorType, 3> tensor_b(LX2, LY2, LZ2);
-  tensor_full.setRandom().eval();
-  tensor_no_full_e.setRandom().eval();
-  tensor_no_full_w.setRandom().eval();
-  tensor_no_full_s.setRandom().eval();
-  tensor_no_full_n.setRandom().eval();
-  tensor_no_full_t.setRandom().eval();
-  tensor_no_full_b.setRandom().eval();
+  int lx = LX;
+  int ly = LY;
+  int lz = LZ;
+  typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> Layer;
+  typedef Eigen::Matrix<Layer, LZ, 1> MutiLayer;
+  MutiLayer tensor_full;
+  MutiLayer tensor_no_full_e;
+  MutiLayer tensor_no_full_w;
+  MutiLayer tensor_no_full_s;
+  MutiLayer tensor_no_full_n;
+  MutiLayer tensor_no_full_t;
+  MutiLayer tensor_no_full_b;
+  MutiLayer tensor_e;
+  MutiLayer tensor_w;
+  MutiLayer tensor_s;
+  MutiLayer tensor_n;
+  MutiLayer tensor_t;
+  MutiLayer tensor_b;
+
+  for (int i = 0; i < LZ; i++) {
+    tensor_full(i) = Layer::Random(lx, ly);
+    tensor_no_full_e(i) = Layer::Random(lx, ly);
+    tensor_no_full_w(i) = Layer::Random(lx, ly);
+    tensor_no_full_s(i) = Layer::Random(lx, ly);
+    tensor_no_full_n(i) = Layer::Random(lx, ly);
+    tensor_no_full_t(i) = Layer::Random(lx, ly);
+    tensor_no_full_b(i) = Layer::Random(lx, ly);
+    tensor_e(i) = Layer::Random(lx, ly);
+    tensor_w(i) = Layer::Random(lx, ly);
+    tensor_s(i) = Layer::Random(lx, ly);
+    tensor_n(i) = Layer::Random(lx, ly);
+    tensor_t(i) = Layer::Random(lx, ly);
+    tensor_b(i) = Layer::Random(lx, ly);
+  }
 
   clock_t start, end;
   start = clock();
-  std::cout << tensor_full(555, 95, 36) << "\t";
+  std::cout << tensor_full(36)(555, 95) << "\t";
 
   for (int i = 0; i < 1000; i++) {
-    auto tensor_temp = tensor_no_full_e * tensor_e.constant(0.1) +
-                       tensor_no_full_w * tensor_w.constant(0.12) +
-                       tensor_no_full_s * tensor_s.constant(0.23) +
-                       tensor_no_full_n * tensor_n.constant(0.21) +
-                       tensor_no_full_t * tensor_t.constant(0.19) +
-                       tensor_no_full_b * tensor_b.constant(0.15);
-    tensor_full.device(dev) = tensor_temp;
-    tensor_no_full_e.device(dev) = tensor_full * tensor_e.constant(0.1) +
-                                   tensor_no_full_e * tensor_e.constant(0.9);
-    tensor_no_full_w.device(dev) = tensor_full * tensor_w.constant(0.12) +
-                                   tensor_no_full_w * tensor_w.constant(0.88);
-    tensor_no_full_s.device(dev) = tensor_full * tensor_s.constant(0.23) +
-                                   tensor_no_full_s * tensor_s.constant(0.77);
-    tensor_no_full_n.device(dev) = tensor_full * tensor_n.constant(0.21) +
-                                   tensor_no_full_n * tensor_n.constant(0.79);
-    tensor_no_full_t.device(dev) = tensor_full * tensor_t.constant(0.19) +
-                                   tensor_no_full_t * tensor_t.constant(0.81);
-    tensor_no_full_b.device(dev) = tensor_full * tensor_b.constant(0.15) +
-                                   tensor_no_full_b * tensor_b.constant(0.85);
+    for (int j = 0; j < LZ; j++) {
+      tensor_full(j) = tensor_no_full_e(j) * 0.1 + tensor_no_full_w(j) * 0.12 +
+                       tensor_no_full_s(j) * 0.23 + tensor_no_full_n(j) * 0.21 +
+                       tensor_no_full_t(j) * 0.19 + tensor_no_full_b(j) * 0.15;
+    }
+    for (int j = 0; j < LZ; j++) {
+      tensor_no_full_e(j) = tensor_full(j) * 0.1 + tensor_no_full_e(j) * 0.9;
+    }
+    for (int j = 0; j < LZ; j++) {
+      tensor_no_full_w(j) = tensor_full(j) * 0.12 + tensor_no_full_w(j) * 0.88;
+    }
+    for (int j = 0; j < LZ; j++) {
+      tensor_no_full_s(j) = tensor_full(j) * 0.23 + tensor_no_full_s(j) * 0.77;
+    }
+    for (int j = 0; j < LZ; j++) {
+      tensor_no_full_n(j) = tensor_full(j) * 0.21 + tensor_no_full_n(j) * 0.79;
+    }
+    for (int j = 0; j < LZ; j++) {
+      tensor_no_full_t(j) = tensor_full(j) * 0.19 + tensor_no_full_t(j) * 0.81;
+    }
+    for (int j = 0; j < LZ; j++) {
+      tensor_no_full_b(j) = tensor_full(j) * 0.15 + tensor_no_full_b(j) * 0.85;
+    }
     // std::cout << i << "\n";
   }
 
-  std::cout << tensor_full(555, 95, 36) << "\t";
+  std::cout << tensor_full(36)(555, 95) << "\t";
 
   end = clock();  // 结束时间
   std::cout << "耗时 = " << double(end - start) / CLOCKS_PER_SEC << "s"
