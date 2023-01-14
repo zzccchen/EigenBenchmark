@@ -22,91 +22,171 @@ int main() {  // 256s 多线程Matrix
   int lx = LX;
   int ly = LY;
   int lz = LZ;
-  typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> Layer;
-  typedef Eigen::Matrix<Layer, LZ, 1> MutiLayer;
-  MutiLayer tensor_full;
-  MutiLayer tensor_no_full_e;
-  MutiLayer tensor_no_full_w;
-  MutiLayer tensor_no_full_s;
-  MutiLayer tensor_no_full_n;
-  MutiLayer tensor_no_full_t;
-  MutiLayer tensor_no_full_b;
-  MutiLayer tensor_e;
-  MutiLayer tensor_w;
-  MutiLayer tensor_s;
-  MutiLayer tensor_n;
-  MutiLayer tensor_t;
-  MutiLayer tensor_b;
-  MutiLayer temp1;
-  MutiLayer temp2;
-
-  for (int i = 0; i < LZ; i++) {
-    tensor_full(i) = Layer::Random(lx, ly);
-    tensor_no_full_e(i) = Layer::Random(lx, ly);
-    tensor_no_full_w(i) = Layer::Random(lx, ly);
-    tensor_no_full_s(i) = Layer::Random(lx, ly);
-    tensor_no_full_n(i) = Layer::Random(lx, ly);
-    tensor_no_full_t(i) = Layer::Random(lx, ly);
-    tensor_no_full_b(i) = Layer::Random(lx, ly);
-    tensor_e(i) = Layer::Random(lx, ly);
-    tensor_w(i) = Layer::Random(lx, ly);
-    tensor_s(i) = Layer::Random(lx, ly);
-    tensor_n(i) = Layer::Random(lx, ly);
-    tensor_t(i) = Layer::Random(lx, ly);
-    tensor_b(i) = Layer::Random(lx, ly);
-  }
+  TensorType* _tensor_full = new TensorType[LX * LY * LZ];
+  Eigen::TensorMap<Eigen::Tensor<TensorType, 3, 1>> tensor_full(_tensor_full,
+                                                                LX, LY, LZ);
+  TensorType* _tensor_no_full_e = new TensorType[LX * LY * LZ];
+  Eigen::TensorMap<Eigen::Tensor<TensorType, 3, 1>> tensor_no_full_e(
+      _tensor_no_full_e, LX, LY, LZ);
+  TensorType* _tensor_no_full_w = new TensorType[LX * LY * LZ];
+  Eigen::TensorMap<Eigen::Tensor<TensorType, 3, 1>> tensor_no_full_w(
+      _tensor_no_full_w, LX, LY, LZ);
+  TensorType* _tensor_no_full_s = new TensorType[LX * LY * LZ];
+  Eigen::TensorMap<Eigen::Tensor<TensorType, 3, 1>> tensor_no_full_s(
+      _tensor_no_full_s, LX, LY, LZ);
+  TensorType* _tensor_no_full_n = new TensorType[LX * LY * LZ];
+  Eigen::TensorMap<Eigen::Tensor<TensorType, 3, 1>> tensor_no_full_n(
+      _tensor_no_full_n, LX, LY, LZ);
+  TensorType* _tensor_no_full_t = new TensorType[LX * LY * LZ];
+  Eigen::TensorMap<Eigen::Tensor<TensorType, 3, 1>> tensor_no_full_t(
+      _tensor_no_full_t, LX, LY, LZ);
+  TensorType* _tensor_no_full_b = new TensorType[LX * LY * LZ];
+  Eigen::TensorMap<Eigen::Tensor<TensorType, 3, 1>> tensor_no_full_b(
+      _tensor_no_full_b, LX, LY, LZ);
+  tensor_full.setRandom().eval();
+  tensor_no_full_e.setRandom().eval();
+  tensor_no_full_w.setRandom().eval();
+  tensor_no_full_s.setRandom().eval();
+  tensor_no_full_n.setRandom().eval();
+  tensor_no_full_t.setRandom().eval();
+  tensor_no_full_b.setRandom().eval();
 
   clock_t start, end;
   start = clock();
-  std::cout << tensor_full(36)(555, 95) << "\t";
-
-  for (int i = 0; i < 100; i++) {
-#pragma omp parallel for schedule(dynamic)
-    for (int j = 0; j < LZ; j++) {
-      tensor_full(j) = tensor_no_full_e(j) * 0.1 + tensor_no_full_w(j) * 0.12 +
-                       tensor_no_full_s(j) * 0.23 + tensor_no_full_n(j) * 0.21 +
-                       tensor_no_full_t(j) * 0.19 + tensor_no_full_b(j) * 0.15;
-    }
-
-#pragma omp parallel for schedule(dynamic)
-    for (int j = 0; j < LZ; j++) {
-      tensor_no_full_e(j) = tensor_full(j) * 0.1 + tensor_no_full_e(j) * 0.9;
-    }
-
-#pragma omp parallel for schedule(dynamic)
-    for (int j = 0; j < LZ; j++) {
-      tensor_no_full_w(j) = tensor_full(j) * 0.12 + tensor_no_full_w(j) * 0.88;
-    }
-
-#pragma omp parallel for schedule(dynamic)
-    for (int j = 0; j < LZ; j++) {
-      tensor_no_full_s(j) = tensor_full(j) * 0.23 + tensor_no_full_s(j) * 0.77;
-    }
-
-#pragma omp parallel for schedule(dynamic)
-    for (int j = 0; j < LZ; j++) {
-      tensor_no_full_n(j) = tensor_full(j) * 0.21 + tensor_no_full_n(j) * 0.79;
-    }
-
-#pragma omp parallel for schedule(dynamic)
-    for (int j = 0; j < LZ; j++) {
-      tensor_no_full_t(j) = tensor_full(j) * 0.19 + tensor_no_full_t(j) * 0.81;
-    }
-
-#pragma omp parallel for schedule(dynamic)
-    for (int j = 0; j < LZ; j++) {
-      tensor_no_full_b(j) = tensor_full(j) * 0.15 + tensor_no_full_b(j) * 0.85;
+  std::cout << _tensor_full[(555 * ly + 95) * lz + 36] << "\t";
+  // #pragma omp parallel for schedule(dynamic)
+  for (int i = 0; i < 1000; i++) {
+    for (int x = 0; x < LX; x++) {
+      for (int y = 0; y < LY; y++) {
+        for (int z = 0; z < LZ; z++) {
+          int index = (x * ly + y) * lz + z;
+          int k = _tensor_full[index] =
+              _tensor_no_full_e[index] * 0.1 + _tensor_no_full_w[index] * 0.12 +
+              _tensor_no_full_s[index] * 0.23 +
+              _tensor_no_full_n[index] * 0.21 +
+              _tensor_no_full_t[index] * 0.19 + _tensor_no_full_b[index] * 0.15;
+          _tensor_no_full_e[index] = k * 0.1 + _tensor_no_full_e[index] * 0.9;
+          _tensor_no_full_w[index] = k * 0.12 + _tensor_no_full_w[index] * 0.88;
+          _tensor_no_full_s[index] = k * 0.23 + _tensor_no_full_s[index] * 0.77;
+          _tensor_no_full_n[index] = k * 0.21 + _tensor_no_full_n[index] * 0.79;
+          _tensor_no_full_t[index] = k * 0.19 + _tensor_no_full_t[index] * 0.81;
+          _tensor_no_full_b[index] = k * 0.15 + _tensor_no_full_b[index] * 0.85;
+        }
+      }
     }
     // std::cout << i << "\n";
   }
 
-  std::cout << tensor_full(36)(555, 95) << "\t";
+  std::cout << _tensor_full[(555 * ly + 95) * lz + 36] << "\t";
 
   end = clock();  // 结束时间
   std::cout << "耗时 = " << double(end - start) / CLOCKS_PER_SEC << "s"
             << std::endl;  // 输出时间（单位：ｓ）
+
   return 0;
 }
+
+// int main() {  // 256s 多线程Matrix
+//   Eigen::setNbThreads(8);
+//   std::cout << Eigen::nbThreads() << "\n";
+//   Eigen::ThreadPool pool(8);
+//   Eigen::ThreadPoolDevice dev(&pool, 8);
+//
+//   int lx = LX;
+//   int ly = LY;
+//   int lz = LZ;
+//   typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> Layer;
+//   typedef Eigen::Matrix<Layer, LZ, 1> MutiLayer;
+//   MutiLayer tensor_full;
+//   MutiLayer tensor_no_full_e;
+//   MutiLayer tensor_no_full_w;
+//   MutiLayer tensor_no_full_s;
+//   MutiLayer tensor_no_full_n;
+//   MutiLayer tensor_no_full_t;
+//   MutiLayer tensor_no_full_b;
+//   MutiLayer tensor_e;
+//   MutiLayer tensor_w;
+//   MutiLayer tensor_s;
+//   MutiLayer tensor_n;
+//   MutiLayer tensor_t;
+//   MutiLayer tensor_b;
+//   MutiLayer temp1;
+//   MutiLayer temp2;
+//
+//   for (int i = 0; i < LZ; i++) {
+//     tensor_full(i) = Layer::Random(lx, ly);
+//     tensor_no_full_e(i) = Layer::Random(lx, ly);
+//     tensor_no_full_w(i) = Layer::Random(lx, ly);
+//     tensor_no_full_s(i) = Layer::Random(lx, ly);
+//     tensor_no_full_n(i) = Layer::Random(lx, ly);
+//     tensor_no_full_t(i) = Layer::Random(lx, ly);
+//     tensor_no_full_b(i) = Layer::Random(lx, ly);
+//     tensor_e(i) = Layer::Random(lx, ly);
+//     tensor_w(i) = Layer::Random(lx, ly);
+//     tensor_s(i) = Layer::Random(lx, ly);
+//     tensor_n(i) = Layer::Random(lx, ly);
+//     tensor_t(i) = Layer::Random(lx, ly);
+//     tensor_b(i) = Layer::Random(lx, ly);
+//   }
+//
+//   clock_t start, end;
+//   start = clock();
+//   std::cout << tensor_full(36)(555, 95) << "\t";
+//
+//   for (int i = 0; i < 100; i++) {
+// #pragma omp parallel for schedule(dynamic)
+//     for (int j = 0; j < LZ; j++) {
+//       tensor_full(j) = tensor_no_full_e(j) * 0.1 + tensor_no_full_w(j) * 0.12
+//       +
+//                        tensor_no_full_s(j) * 0.23 + tensor_no_full_n(j) *
+//                        0.21 + tensor_no_full_t(j) * 0.19 +
+//                        tensor_no_full_b(j) * 0.15;
+//     }
+//
+// #pragma omp parallel for schedule(dynamic)
+//     for (int j = 0; j < LZ; j++) {
+//       tensor_no_full_e(j) = tensor_full(j) * 0.1 + tensor_no_full_e(j) * 0.9;
+//     }
+//
+// #pragma omp parallel for schedule(dynamic)
+//     for (int j = 0; j < LZ; j++) {
+//       tensor_no_full_w(j) = tensor_full(j) * 0.12 + tensor_no_full_w(j) *
+//       0.88;
+//     }
+//
+// #pragma omp parallel for schedule(dynamic)
+//     for (int j = 0; j < LZ; j++) {
+//       tensor_no_full_s(j) = tensor_full(j) * 0.23 + tensor_no_full_s(j) *
+//       0.77;
+//     }
+//
+// #pragma omp parallel for schedule(dynamic)
+//     for (int j = 0; j < LZ; j++) {
+//       tensor_no_full_n(j) = tensor_full(j) * 0.21 + tensor_no_full_n(j) *
+//       0.79;
+//     }
+//
+// #pragma omp parallel for schedule(dynamic)
+//     for (int j = 0; j < LZ; j++) {
+//       tensor_no_full_t(j) = tensor_full(j) * 0.19 + tensor_no_full_t(j) *
+//       0.81;
+//     }
+//
+// #pragma omp parallel for schedule(dynamic)
+//     for (int j = 0; j < LZ; j++) {
+//       tensor_no_full_b(j) = tensor_full(j) * 0.15 + tensor_no_full_b(j) *
+//       0.85;
+//     }
+//     // std::cout << i << "\n";
+//   }
+//
+//   std::cout << tensor_full(36)(555, 95) << "\t";
+//
+//   end = clock();  // 结束时间
+//   std::cout << "耗时 = " << double(end - start) / CLOCKS_PER_SEC << "s"
+//             << std::endl;  // 输出时间（单位：ｓ）
+//   return 0;
+// }
 
 // int main() {  // 256s 单线程Matrix
 //   Eigen::setNbThreads(8);
